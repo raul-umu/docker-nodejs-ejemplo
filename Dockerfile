@@ -30,4 +30,5 @@ RUN npm install --only=production
 CMD ["node", "server.js"] # Asegúrate de que el archivo de entrada sea correcto
 
 
+git add Dockerfile
 
