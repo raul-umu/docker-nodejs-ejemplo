@@ -1,25 +1,29 @@
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
+ARG NODE_VERSION=18.0.0
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
-FROM node:18.0.0-alpine as base
-
+# Etapa base
+FROM node:${NODE_VERSION}-alpine as base
 WORKDIR /usr/src/app
 EXPOSE 3000
 
-FROM base as test
-ENV NODE_ENV test
+# Etapa de desarrollo
+FROM base as dev
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
     npm ci --include=dev
 USER node
 COPY . .
-RUN npm run test
+CMD npm run dev
 
-
-
+# Etapa de producción
+FROM base as prod
+ENV NODE_ENV production
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=package-lock.json,target=package-lock.json \
+    --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev
+USER node
+COPY . .
+CMD node src/index.js
