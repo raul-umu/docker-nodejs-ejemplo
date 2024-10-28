@@ -6,20 +6,28 @@
 
 # Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
 
-FROM node:18.0.0-alpine as base
-
+# Definir la etapa base
+FROM node:18.0.0-alpine AS base
 WORKDIR /usr/src/app
-EXPOSE 3000
+COPY package*.json ./
+RUN npm install --include=dev
 
-FROM base as test
+# Definir la etapa de test
+FROM base AS test
 ENV NODE_ENV test
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
     npm ci --include=dev
-USER node
 COPY . .
 RUN npm run test
+
+# Definir la etapa de producción
+FROM base AS prod
+ENV NODE_ENV production
+COPY . .
+RUN npm install --only=production
+CMD ["node", "server.js"] # Asegúrate de que el archivo de entrada sea correcto
 
 
 
